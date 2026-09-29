@@ -1,10 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
+import {
+  CreateAlunoDto,
+} from './dto/create-aluno.dto.js';
+
+import {
+  UpdateAlunoDto,
+} from './dto/update-aluno.dto.js';
 
 @Injectable()
 export class AlunosService {
   private alunos = [
-    { id: 1, nome: 'Ana', curso: 'Sistemas de Informação' },
-    { id: 2, nome: 'Carlos', curso: 'Ciência da Computação' },
+    {
+      id: 1,
+      nome: 'Ana',
+      curso: 'Sistemas de Informação',
+    },
+    {
+      id: 2,
+      nome: 'Carlos',
+      curso: 'Ciência da Computação',
+    },
   ];
 
   findAll() {
@@ -12,43 +31,50 @@ export class AlunosService {
   }
 
   findById(id: number) {
-    return this.alunos.find((aluno) => aluno.id === id);
+    const aluno = this.alunos.find(
+      (aluno) => aluno.id === id,
+    );
+
+    if (!aluno) {
+      throw new NotFoundException(
+        'Aluno não encontrado',
+      );
+    }
+
+    return aluno;
   }
 
- create(nome: string, curso: string) {
-  const novoAluno = {
-    id: this.alunos.length + 1,
-    nome,
-    curso,
-  };
+  create(data: CreateAlunoDto) {
+    const novoAluno = {
+      id: this.alunos.length + 1,
+      nome: data.nome,
+      curso: data.curso,
+    };
 
-  this.alunos.push(novoAluno);
+    this.alunos.push(novoAluno);
 
-  return novoAluno;
-}
-update(id: number, nome: string, curso: string) {
-  const aluno = this.alunos.find((aluno) => aluno.id === id);
-
-  if (!aluno) {
-    return null;
+    return novoAluno;
   }
 
-  aluno.nome = nome;
-  aluno.curso = curso;
+  update(
+    id: number,
+    data: UpdateAlunoDto,
+  ) {
+    const aluno = this.findById(id);
 
-  return aluno;
-}
-delete(id: number) {
-  const index = this.alunos.findIndex(
-    (aluno) => aluno.id === id,
-  );
+    aluno.nome = data.nome;
+    aluno.curso = data.curso;
 
-  if (index === -1) {
-    return false;
+    return aluno;
   }
 
-  this.alunos.splice(index, 1);
+  delete(id: number) {
+    this.findById(id);
 
-  return true;
-}
+    const index = this.alunos.findIndex(
+      (aluno) => aluno.id === id,
+    );
+
+    this.alunos.splice(index, 1);
+  }
 }
