@@ -1,54 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { AlunosRepository } from './alunos.repository.js';
 
 @Injectable()
 export class AlunosService {
-  private alunos = [
-    { id: 1, nome: 'Ana', curso: 'Sistemas de Informação' },
-    { id: 2, nome: 'Carlos', curso: 'Ciência da Computação' },
-  ];
+  constructor(
+    private readonly alunosRepository: AlunosRepository,
+  ) {}
 
   findAll() {
-    return this.alunos;
+    return this.alunosRepository.findAll();
   }
 
-  findById(id: number) {
-    return this.alunos.find((aluno) => aluno.id === id);
+  async findById(id: number) {
+    const aluno = await this.alunosRepository.findById(id);
+
+    if (!aluno) {
+      throw new NotFoundException('Aluno não encontrado');
+    }
+
+    return aluno;
   }
 
- create(nome: string, curso: string) {
-  const novoAluno = {
-    id: this.alunos.length + 1,
-    nome,
-    curso,
-  };
-
-  this.alunos.push(novoAluno);
-
-  return novoAluno;
-}
-update(id: number, nome: string, curso: string) {
-  const aluno = this.alunos.find((aluno) => aluno.id === id);
-
-  if (!aluno) {
-    return null;
+  create(nome: string, curso: string) {
+    return this.alunosRepository.create(nome, curso);
   }
 
-  aluno.nome = nome;
-  aluno.curso = curso;
-
-  return aluno;
-}
-delete(id: number) {
-  const index = this.alunos.findIndex(
-    (aluno) => aluno.id === id,
-  );
-
-  if (index === -1) {
-    return false;
+  async update(id: number, nome: string, curso: string) {
+    await this.findById(id);
+    return this.alunosRepository.update(id, nome, curso);
   }
 
-  this.alunos.splice(index, 1);
-
-  return true;
-}
+  async delete(id: number) {
+    await this.findById(id);
+    await this.alunosRepository.delete(id);
+    return true;
+  }
 }
